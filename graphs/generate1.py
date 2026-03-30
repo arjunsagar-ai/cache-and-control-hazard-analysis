@@ -132,4 +132,121 @@ plt.tight_layout()
 plt.savefig("writebacks_comparison.png", dpi=300)
 plt.close()
 
+# Policies
+policies = ["LRU", "FIFO", "RANDOM"]
+
+# Function to extract stat
+def get_stat(file_path, stat_name):
+    try:
+        with open(file_path, 'r') as f:
+            for line in f:
+                if stat_name in line:
+                    return float(line.split()[1])
+    except:
+        return 0
+    return 0
+
+# Store results
+cpi_results = {}
+miss_results = {}
+writeback_results = {}
+
+for policy in policies:
+    path = f"../{policy}/timing_simple/stats.txt"
+
+    # CPI
+    cpi_results[policy] = get_stat(path, "system.cpu.cpi")
+
+    # Miss Rate
+    miss_results[policy] = get_stat(path, "overallMissRate")
+
+    # Writebacks
+    writebacks = (
+        get_stat(path, "writebacks") or
+        get_stat(path, "system.cpu.dcache.writebacks")
+    )
+    writeback_results[policy] = writebacks
+
+
+# -------- GRAPH 1: CPI --------
+plt.figure(figsize=(8,5))
+values = [cpi_results[p] for p in policies]
+
+plt.bar(policies, values)
+
+plt.title("CPI Comparison (TimingSimpleCPU)")
+plt.xlabel("Cache Policy")
+plt.ylabel("CPI")
+
+for i, v in enumerate(values):
+    plt.text(i, v, f"{v:.4f}", ha='center', va='bottom')
+
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.savefig("cpi_timingsimple.png", dpi=300)
+plt.close()
+
+
+# -------- GRAPH 2: Miss Rate --------
+plt.figure(figsize=(8,5))
+values = [miss_results[p] for p in policies]
+
+plt.bar(policies, values)
+
+plt.title("Cache Miss Rate (TimingSimpleCPU)")
+plt.xlabel("Cache Policy")
+plt.ylabel("Miss Rate")
+
+for i, v in enumerate(values):
+    plt.text(i, v, f"{v:.6f}", ha='center', va='bottom')
+
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.savefig("miss_timingsimple.png", dpi=300)
+plt.close()
+
+
+# -------- GRAPH 3: Writebacks --------
+plt.figure(figsize=(8,5))
+values = [writeback_results[p] for p in policies]
+
+plt.bar(policies, values)
+
+plt.title("Writebacks Comparison (TimingSimpleCPU)")
+plt.xlabel("Cache Policy")
+plt.ylabel("Writebacks")
+
+for i, v in enumerate(values):
+    plt.text(i, v, f"{int(v)}", ha='center', va='bottom')
+
+plt.grid(axis='y', linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.savefig("writeback_timingsimple.png", dpi=300)
+plt.close()
+
+
+# -------- GRAPH 4: Line Graph --------
+plt.figure(figsize=(8,5))
+
+x = [1, 2, 3]
+
+fifo = [miss_results["FIFO"]] * 3
+random = [miss_results["RANDOM"]] * 3
+lru = [miss_results["LRU"]] * 3
+
+plt.plot(x, fifo, marker='o', linestyle='-', label="FIFO")
+plt.plot(x, random, marker='o', linestyle='-', label="Random")
+plt.plot(x, lru, marker='o', linestyle='-', label="LRU")
+
+plt.title("Miss Rate Comparison (TimingSimpleCPU)")
+plt.xlabel("Execution Points")
+plt.ylabel("Miss Rate")
+
+plt.legend()
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.savefig("line_timingsimple.png", dpi=300)
+plt.close()
+
+print("TimingSimple-only graphs generated!")
 print("Cache policy graphs generated!")
